@@ -5,7 +5,11 @@ import 'package:provider/provider.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'data/class_repository.dart';
+import 'data/payment_repository.dart';
+import 'data/student_repository.dart';
 import 'features/auth/auth_provider.dart';
+import 'features/tutor/students/students_provider.dart';
 import 'firebase_options.dart'; // created by `flutterfire configure`
 import 'services/auth_service.dart';
 
@@ -13,8 +17,21 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(AuthService())..init(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(AuthService())..init(),
+        ),
+        // Repositories: swap the Mock* classes for Firestore versions later.
+        // Screens only know the interfaces, so they do not change.
+        Provider<StudentRepository>(create: (_) => MockStudentRepository()),
+        Provider<ClassRepository>(create: (_) => MockClassRepository()),
+        Provider<PaymentRepository>(create: (_) => MockPaymentRepository()),
+        ChangeNotifierProvider(
+          create: (context) =>
+              StudentsProvider(context.read<StudentRepository>()),
+        ),
+      ],
       child: const TutorIQApp(),
     ),
   );
